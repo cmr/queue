@@ -28,7 +28,7 @@ local site = tweed.make_site {
       end
     end
   },
-  ["string:person"] = function(person, context)
+  [param "string:person"] = function(person, context)
     local res = context.response
     local queue = data.queue_for_person(person)
     if queue then
