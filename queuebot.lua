@@ -1,5 +1,5 @@
+require "luarocks.loader"
 require "irc"
-
 local config = require "config".irc
 
 local lanes = require "lanes".configure()
@@ -16,7 +16,7 @@ local send_request = lanes.gen("*", function(command, account, item, id)
 	local req = ('{"command": "%s", "account": "%s", "item": "%s"}'):format(command, account, item)
 	local tab = {}
 	local _, status = http.request{
-		url = "http://localhost:8080/api", 
+		url = "http://localhost:8080/webservice.lua/", 
 		method = "POST",
 		headers = {
 			["Content-Length"] = #req,
@@ -34,7 +34,7 @@ local send_request = lanes.gen("*", function(command, account, item, id)
 end)
 
 function target(message)
-	_, nick, command, item = re.find(message, "{[^:]*} ': ' {[^ ]*} ' ' {.*}")
+	nick, command, item = re.match(message, "{[^:]*} ': ' {[^ ]*} ' ' {.*}")
 	if nick == nil or command == nil or item == nil then
 		return nil
 	end
