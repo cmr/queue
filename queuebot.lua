@@ -13,10 +13,11 @@ local queued_requests = {}
 local send_request = lanes.gen("*", function(command, account, item, id)
 	local http = require "socket.http"
 	local ltn12 = require "ltn12"
-	local req = ('{"command": "%s", "account": "%s", "item": "%s"}'):format(command, account, item)
 	local tab = {}
+	local req = item
+	print(req)
 	local _, status = http.request{
-		url = "http://localhost:8080/webservice.lua/", 
+		url = "http://localhost:8080/webservice.lua/" .. account, 
 		method = "POST",
 		headers = {
 			["Content-Length"] = #req,
