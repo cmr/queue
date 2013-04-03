@@ -13,28 +13,48 @@ local queued_requests = {}
 local send_request = lanes.gen("*", function(command, account, item, id)
 	local http = require "socket.http"
 	local ltn12 = require "ltn12"
-	local req = ('{"command": "%s", "account": "%s", "item": "%s"}'):format(command, account, item)
 	local tab = {}
-	local _, status = http.request{
-		url = "http://localhost:8080/webservice.lua/", 
-		method = "POST",
-		headers = {
-			["Content-Length"] = #req,
-			["Content-Type"] = "application/json"
-		},
-		source = ltn12.source.string(req),
-		sink = ltn12.sink.table(tab)
-	}
-	if status ~= 200 then
-		linda:set(id, false)
-		print("http req failed: " .. tostring(status) .. tostring(table.concat(tab)))
-	else
-		linda:set(id, true)
+
+	if command == "push" then
+		local _, status = http.request{
+			url = config.api_url .. account, 
+			method = "POST",
+			source = ltn12.source.string(item),
+			sink = ltn12.sink.table(tab)
+		}
+		if status ~= 200 then
+			linda:set(id, false)
+			print("http req failed: " .. tostring(status) .. tostring(table.concat(tab)))
+		else
+			linda:set(id, true)
+		end
+	elseif command == "pop" then
+		local _, status = http.request{
+			url = config.api_url .. account, 
+			method = "GET",
+			sink = ltn12.sink.table(tab)
+		}
+		if status ~= 200 then
+			linda:set(id, false)
+			print("http req failed: " .. tostring(status) .. tostring(table.concat(tab)))
+		else
+			linda:set(id, cjson.decode(table.concat(tab)[0].content))
+			local _, status = http.request{
+				url = config.api_url .. account, 
+				method = "DELETE",
+				source = ltn12.source.string(cjson.decode(table.concat(tab))[0].id),
+				sink = ltn12.sink.table(tab)
+			}
+			linda:set(id, true)
+			print("deleting item failed!")
+		end
 	end
 end)
 
+local pat = ("'%s: ' {[^ ]*} ' ' {[^:]*} ' ' {.*}"):format(config.irc.nick)
+
 function target(message)
-	nick, command, item = re.match(message, "{[^:]*} ': ' {[^ ]*} ' ' {.*}")
+	local command, nick, item = re.match(message, pat)
 	if nick == nil or command == nil or item == nil then
 		return nil
 	end
@@ -49,9 +69,15 @@ commands = {
 local qb = irc.new { nick = config.nick }
 
 qb:hook("OnChat", function(user, channel, message)
-	nick, command, item = target(message)
-	if nick == nil then
-		return
+	local nick, command, item
+
+	if message ~= "pop" then
+		nick, command, item = target(message)
+		if nick == nil then
+			return
+		end
+	else
+		nick, command = user, "pop"
 	end
 
 	if commands[command] then

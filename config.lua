@@ -9,7 +9,8 @@ return {
 		nick = "queuebot2",
 		network = "irc.coldfront.net",
 		channels = { "#sidewaysanctum" },
-	}
+	},
+	api_url = "http://localhost:8080/webservice.lua/"
 }
 
 
