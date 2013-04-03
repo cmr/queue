@@ -8,6 +8,15 @@ local cjson = require "cjson"
 local env = assert(luasql.postgres())
 
 local site = tweed.make_site {
+	[""] = function(context)
+		context.response:html(io.open("app.html"):read("*a"))
+	end,
+	["jquery.min.js"] = function(context)
+		context.response:text(io.open("jquery.min.js"):read("*a"))
+	end,
+	["handlebars.js"] = function(context)
+		context.response:text(io.open("handlebars.js"):read("*a"))
+	end,
 	[tweed.string 'username'] = {
 		[tweed.POST] = function(context)
 			-- enqueue item

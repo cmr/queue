@@ -1,12 +1,12 @@
 return {
 	db = {
 		name = "queue",
-		user = "queue",
-		pass = "foobar",
+		user = "cmr",
+		pass = "",
 		host = "localhost"
 	},
 	irc = {
-		nick = "queuebot",
+		nick = "queuebot2",
 		network = "irc.coldfront.net",
 		channels = { "#sidewaysanctum" },
 	}
