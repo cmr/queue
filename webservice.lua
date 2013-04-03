@@ -32,7 +32,8 @@ local site = tweed.make_site {
 			local query = [[ INSERT INTO items (itemid, content, sorted, userid) VALUES ('%s', '%s', FALSE, '%s'); ]]
 			query = query:format(uuid.new(), conn:escape(item), conn:escape(userid))
 			assert(conn:execute(query))
-			conn:commit()
+			assert(conn:commit())
+			assert(conn:close())
 		end,
 		[tweed.GET] = function(context)
 			local itemid = context.request.body
@@ -52,6 +53,8 @@ local site = tweed.make_site {
 			end
 
 			context.response:json(cjson.encode(results))
+			assert(cursor:close())
+			assert(conn:close())
 		end,
 		[tweed.DELETE] = function(context)
 			local id = context.request.body
@@ -66,6 +69,8 @@ local site = tweed.make_site {
 			local cursor = conn:execute(query:format(id))
 
 			context.response:json(cjson.encode({success=true}))
+			assert(cursor:close())
+			assert(conn:close())
 		end,
 	}
 }
