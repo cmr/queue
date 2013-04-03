@@ -14,30 +14,6 @@ local send_request = lanes.gen("*", function(command, account, item, id)
 	local http = require "socket.http"
 	local ltn12 = require "ltn12"
 	local tab = {}
-<<<<<<< HEAD
-	local req = item
-	local _, status
-
-	if command == "push" then
-		_, status = http.request{
-			url = "http://queue.octayn.net/webservice.lua/" .. account, 
-			method = "POST",
-			headers = {
-				["Content-Length"] = #req,
-				["Content-Type"] = "application/json"
-			},
-			source = ltn12.source.string(req),
-			sink = ltn12.sink.table(tab)
-		}
-	end
-
-	if status ~= 200 then
-		linda:set(id, false)
-		print("http req failed: " .. tostring(status) .. tostring(table.concat(tab)))
-	else
-		linda:set(id, true)
-=======
-
 	if command == "push" then
 		local _, status = http.request{
 			url = config.api_url .. account, 
@@ -71,7 +47,6 @@ local send_request = lanes.gen("*", function(command, account, item, id)
 			linda:set(id, true)
 			print("deleting item failed!")
 		end
->>>>>>> 1ca00d7a0b7ea239d455d58bc58e21334cde57bb
 	end
 end)
 
