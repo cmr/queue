@@ -32,7 +32,7 @@ local site = tweed.make_site {
 			local query = [[ INSERT INTO items (itemid, content, sorted, userid) VALUES ('%s', '%s', FALSE, '%s'); ]]
 			query = query:format(uuid.new(), conn:escape(item), conn:escape(userid))
 			assert(conn:execute(query))
-			assert(conn:commit())
+			conn:commit()
 			assert(conn:close())
 		end,
 		[tweed.GET] = function(context)
