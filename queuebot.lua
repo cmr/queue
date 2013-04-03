@@ -1,7 +1,7 @@
 require "luarocks.loader"
 require "irc"
 local config = require "config".irc
-
+local inspect = require "inspect"
 local lanes = require "lanes".configure()
 local linda = lanes.linda()
 
@@ -15,17 +15,21 @@ local send_request = lanes.gen("*", function(command, account, item, id)
 	local ltn12 = require "ltn12"
 	local tab = {}
 	local req = item
-	print(req)
-	local _, status = http.request{
-		url = "http://localhost:8080/webservice.lua/" .. account, 
-		method = "POST",
-		headers = {
-			["Content-Length"] = #req,
-			["Content-Type"] = "application/json"
-		},
-		source = ltn12.source.string(req),
-		sink = ltn12.sink.table(tab)
-	}
+	local _, status
+
+	if command == "push" then
+		_, status = http.request{
+			url = "http://queue.octayn.net/webservice.lua/" .. account, 
+			method = "POST",
+			headers = {
+				["Content-Length"] = #req,
+				["Content-Type"] = "application/json"
+			},
+			source = ltn12.source.string(req),
+			sink = ltn12.sink.table(tab)
+		}
+	end
+
 	if status ~= 200 then
 		linda:set(id, false)
 		print("http req failed: " .. tostring(status) .. tostring(table.concat(tab)))
@@ -43,8 +47,8 @@ function target(message)
 end
 
 commands = {
-	enqueue = true,
-	dequeue = true
+	push = true,
+	pop = true
 }
 
 local qb = irc.new { nick = config.nick }
@@ -73,7 +77,8 @@ end
 while true do
 	qb:think()
 	for k,v in pairs(queued_requests) do
-		if linda:get(k) == false then
+		local val = linda:get(k)
+		if val == false then
 			queued_requests[k] = nil
 			qb:sendChat(v, ("%s failed!"):format(k))
 		end
