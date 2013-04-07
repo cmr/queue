@@ -1,16 +1,16 @@
 return {
 	db = {
-		name = "d304qi0tu24n2h",
-		user = "htwwjcymkgklmp",
-		pass = "F6jKkvuUiKgYgB04hUZ7iglIhC",
-		host = "ec2-54-225-69-193.compute-1.amazonaws.com",
+		name = "queue",
+		user = "queue",
+		pass = "foo",
+		host = "localhost",
 	},
 	irc = {
-		nick = "queuebot2",
+		nick = "queuebot",
 		network = "irc.coldfront.net",
-		channels = { "#ai-dev" },
+		channels = { "#sidewaysanctum" },
 	},
-	api_url = "http://localhost:80/webservice.lua/"
+	api_url = "http://localhost/webservice.lua/"
 }
 
 
