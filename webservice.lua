@@ -69,7 +69,6 @@ local site = tweed.make_site {
 			local cursor = conn:execute(query:format(id))
 
 			context.response:json(cjson.encode({success=true}))
-			assert(cursor:close())
 			assert(conn:close())
 		end,
 	}
