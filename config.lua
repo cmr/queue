@@ -10,7 +10,7 @@ return {
 		network = "irc.coldfront.net",
 		channels = { "#ai-dev" },
 	},
-	api_url = "http://localhost:8080/webservice.lua/"
+	api_url = "http://localhost:80/webservice.lua/"
 }
 
 

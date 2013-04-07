@@ -1,6 +1,6 @@
 require "luarocks.loader"
 require "irc"
-local config = require "config".irc
+local config = require "config"
 local inspect = require "inspect"
 local lanes = require "lanes".configure()
 local linda = lanes.linda()
@@ -13,11 +13,15 @@ local queued_requests = {}
 local send_request = lanes.gen("*", function(command, account, item, id)
 	local http = require "socket.http"
 	local ltn12 = require "ltn12"
+	local cjson = require "cjson"
+
 	local tab = {}
+
 	if command == "push" then
 		local _, status = http.request{
 			url = config.api_url .. account, 
 			method = "POST",
+			headers = {["Content-Length"]=#item},
 			source = ltn12.source.string(item),
 			sink = ltn12.sink.table(tab)
 		}
@@ -37,20 +41,20 @@ local send_request = lanes.gen("*", function(command, account, item, id)
 			linda:set(id, false)
 			print("http req failed: " .. tostring(status) .. tostring(table.concat(tab)))
 		else
-			linda:set(id, cjson.decode(table.concat(tab)[0].content))
+			local obj = cjson.decode(table.concat(tab))[1]
+			linda:set(id, obj.content)
 			local _, status = http.request{
 				url = config.api_url .. account, 
 				method = "DELETE",
-				source = ltn12.source.string(cjson.decode(table.concat(tab))[0].id),
+				headers = {["Content-Length"]=#obj.id},
+				source = ltn12.source.string(obj.id),
 				sink = ltn12.sink.table(tab)
 			}
-			linda:set(id, true)
-			print("deleting item failed!")
 		end
 	end
 end)
 
-local pat = ("'%s: ' {[^ ]*} ' ' {[^:]*} ' ' {.*}"):format(config.irc.nick)
+local pat = ("'%s: ' {[^ ]*} ' ' {[^ ]*} ' ' {.*}"):format(config.irc.nick)
 
 function target(message)
 	local command, nick, item = re.match(message, pat)
@@ -65,32 +69,32 @@ commands = {
 	pop = true
 }
 
-local qb = irc.new { nick = config.nick }
+local qb = irc.new { nick = config.irc.nick }
 
 qb:hook("OnChat", function(user, channel, message)
 	local nick, command, item
 
-	if message ~= "pop" then
+	if message ~= config.irc.nick .. ": pop" then
 		nick, command, item = target(message)
 		if nick == nil then
 			return
 		end
 	else
-		nick, command = user, "pop"
+		nick, command = user.nick, "pop"
 	end
 
 	if commands[command] then
 		local id_ = tostring(id)
 		id = id + 1
-		send_request(command, nick, item, id_)
 		queued_requests[id_] = channel
+		send_request(command, nick, item, id_)
 		qb:sendChat(channel, ("done [%s]"):format(id_))
 	end
 end)
 
-qb:connect(config.network)
+qb:connect(config.irc.network)
 
-for _, channel in ipairs(config.channels) do
+for _, channel in ipairs(config.irc.channels) do
 	qb:join(channel)
 end
 
@@ -101,6 +105,9 @@ while true do
 		if val == false then
 			queued_requests[k] = nil
 			qb:sendChat(v, ("%s failed!"):format(k))
+		elseif type(val) == "string" then
+			queued_requests[k] = nil
+			qb:sendChat(v, val)
 		end
 	end
 	sleep(0.3)
