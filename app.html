@@ -19,13 +19,13 @@
 	</head>
 	<body>
 		<div><input id="name" type="text" /> <button onclick="go()">load queue</button></div>
-		<script src="/webservice.lua/jquery.min.js"></script>
-		<script src="/webservice.lua/handlebars.js"></script>
+		<script src="/jquery.min.js"></script>
+		<script src="/handlebars.js"></script>
 		<script>
 			function go () {
 				var template = "<div class='item'><span class='delete' onclick='del(this)'></span><a title='{{id}}' href='{{content}}'>{{content}}</a></div>"
 				template = Handlebars.compile(template)
-				$.getJSON("/webservice.lua/" + $("#name").val(), function(data) {
+				$.getJSON("/api/" + $("#name").val(), function(data) {
 					for (var i = 0; i < data.length; i++) {
 						$('body').append(template(data[i]))
 					}
@@ -34,9 +34,10 @@
 			function del(t) {
 				var p = $(t).parent()
 				var id = $('a', p).attr('title')
-				$.ajax({type: 'DELETE', data: id, success: function(){ p.remove() }, url: "/webservice.lua/" + $("#name").val()})
+				$.ajax({type: 'DELETE', data: id, success: function(){ p.remove() }, url: "/api/" + $("#name").val()})
 			}
 		</script>
 	</body>
 </html>
+
 
