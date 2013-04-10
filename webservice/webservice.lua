@@ -15,7 +15,7 @@ local site = tweed.make_site {
 			local conn = assert(env:connect(config.db.name, config.db.user, config.db.pass, config.db.host, config.db.port))
 			local userid = conn:execute(("SELECT userid FROM users WHERE username = '%s'"):format(conn:escape(context.params.username))):fetch()
 			if not userid then
-				context.response:err(404, "no such user")
+				context.response:err(404, {code=1, msg="no such user"})
 				return
 			end
 
@@ -31,7 +31,7 @@ local site = tweed.make_site {
 			local conn = assert(env:connect(config.db.name, config.db.user, config.db.pass, config.db.host, config.db.port))
 			local userid = conn:execute(("SELECT userid FROM users WHERE username = '%s'"):format(conn:escape(context.params.username))):fetch()
 			if not userid then
-				context.response:err(404, "no such user")
+				context.response:err(404, {code=1, msg="no such user"})
 				return
 			end
 
@@ -52,7 +52,7 @@ local site = tweed.make_site {
 			local conn = assert(env:connect(config.db.name, config.db.user, config.db.pass, config.db.host, config.db.port))
 			local userid = conn:execute(("SELECT userid FROM users WHERE username = '%s'"):format(conn:escape(context.params.username))):fetch()
 			if not userid then
-				context.response:err(404, "no such user")
+				context.response:err(404, {code=1, msg="no such user"})
 				return
 			end
 
@@ -65,9 +65,16 @@ local site = tweed.make_site {
 	}
 }
 
-site.error_handlers[400] = function(site, ...)
-	local res = context.response
-	res:json(cjson.encode({success=false, err={...}}))
+site.error_handlers = {}
+
+site.error_handlers.default = function(response, status, ...)
+	local res = response
+	local err = ...
+	if type(err) == "table" then
+		res:json(cjson.encode({success=false, code=err.code, msg=err.msg}))
+	else
+		res:json(cjson.encode({success=false, msg={...}}))
+	end
 end
 
 return site
