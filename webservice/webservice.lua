@@ -25,6 +25,8 @@ local site = tweed.make_site {
 			assert(conn:execute(query))
 			conn:commit()
 			assert(conn:close())
+
+			context.response:json(cjson.encode({success = true}))
 		end,
 		[tweed.GET] = function(context)
 			local itemid = context.request.body
