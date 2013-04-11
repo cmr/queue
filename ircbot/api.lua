@@ -34,12 +34,18 @@ end
 
 function M.pop(person)
 	local suc, things = M.getall(person)
-	print(inspect(things))
-	if not suc then return things end
-	local item = things[1]
-	pcall(M.delete(person, item.id))
+	if not suc then return suc, things end
 
-	return true, item.content
+	local item = things[1]
+
+	suc, things = M.delete(person, item.id)
+	if not suc then
+		msg = "(warning: failed to remove item!) "
+	else
+		msg = ""
+	end
+
+	return true, msg .. item.content
 end
 
 function M.getbytag(person, tag)
