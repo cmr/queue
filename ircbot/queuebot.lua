@@ -46,7 +46,7 @@ qb:hook("OnChat", function(user, channel, message)
 		if suc then
 			if command == "list" then
 				for k, v in ipairs(res) do
-					qb:sendChat(user.nick, v.content)
+					qb:sendChat(user.nick, ("(%s) %s"):format(v.id,v.content))
 				end
 			else
 				qb:sendChat(channel, "Success: " .. res)
