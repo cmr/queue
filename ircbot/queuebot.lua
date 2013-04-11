@@ -21,7 +21,8 @@ end
 
 commands = {
 	push = "push",
-	pop = "pop"
+	pop = "pop",
+	list = "getall"
 }
 
 local qb = irc.new { nick = config.irc.nick }
@@ -29,19 +30,27 @@ local qb = irc.new { nick = config.irc.nick }
 qb:hook("OnChat", function(user, channel, message)
 	local nick, command, item
 
-	if message ~= config.irc.nick .. ": pop" then
+	if message == config.irc.nick .. ": pop" then
+		nick, command = user.nick, "pop"
+	elseif message == config.irc.nick .. ": list" then
+		nick, command = user.nick, "list"
+	else
 		nick, command, item = target(message)
 		if nick == nil then
 			return
 		end
-	else
-		nick, command = user.nick, "pop"
 	end
 
 	if commands[command] then
 		local suc, res = api[commands[command]](nick, item)
 		if suc then
-			qb:sendChat(channel, "Success: " .. res)
+			if command == "list" then
+				for k, v in ipairs(res) do
+					qb:sendChat(user.nick, v.content)
+				end
+			else
+				qb:sendChat(channel, "Success: " .. res)
+			end
 			return
 		else
 			qb:sendChat(channel, "Error: " .. res.msg)
