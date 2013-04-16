@@ -1,68 +1,30 @@
-local config = require "config"
-local luasql = require "luasql.postgres"
-local uuid = require "uuid"
 local tweed = require "tweed"
-local inspect = require "inspect"
 local cjson = require "cjson"
 
-local env = assert(luasql.postgres())
+local config = require "config"
+local db = require "db"
 
 local site = tweed.make_site {
 	[tweed.string 'username'] = {
 		[tweed.POST] = function(context)
 			-- enqueue item
 			local item = context.request.body
-			local conn = assert(env:connect(config.db.name, config.db.user, config.db.pass, config.db.host, config.db.port))
-			local userid = conn:execute(("SELECT userid FROM users WHERE username = '%s'"):format(conn:escape(context.params.username))):fetch()
-			if not userid then
-				context.response:err(404, {code=1, msg="no such user"})
-				return
+
+			if db.add_item(context, context.params.username, item) then
+				context.response:json(cjson.encode({success = true}))
 			end
-
-			print (item)
-			local query = [[ INSERT INTO items (itemid, content, sorted, userid) VALUES ('%s', '%s', FALSE, '%s'); ]]
-			query = query:format(uuid.new(), conn:escape(item), conn:escape(userid))
-			assert(conn:execute(query))
-			conn:commit()
-			assert(conn:close())
-
-			context.response:json(cjson.encode({success = true}))
 		end,
 		[tweed.GET] = function(context)
-			local itemid = context.request.body
-			local conn = assert(env:connect(config.db.name, config.db.user, config.db.pass, config.db.host, config.db.port))
-			local userid = conn:execute(("SELECT userid FROM users WHERE username = '%s'"):format(conn:escape(context.params.username))):fetch()
-			if not userid then
-				context.response:err(404, {code=1, msg="no such user"})
-				return
+			local items = db.get_all_by_user(context, context.params.username)
+            if items then
+				context.response:json(cjson.encode(items))
 			end
-
-			local query = [[ SELECT itemid, content, sort_index FROM items WHERE userid = '%s'; ]]
-			local cursor = conn:execute(query:format(userid))
-			local results = {}
-			for i = 1, cursor:numrows() do
-				local id, content, idx = cursor:fetch()
-				results[i] = {id=id, content=content, idx=idx or -1}
-			end
-
-			context.response:json(cjson.encode(results))
-			assert(cursor:close())
-			assert(conn:close())
 		end,
 		[tweed.DELETE] = function(context)
 			local id = context.request.body
-			local conn = assert(env:connect(config.db.name, config.db.user, config.db.pass, config.db.host, config.db.port))
-			local userid = conn:execute(("SELECT userid FROM users WHERE username = '%s'"):format(conn:escape(context.params.username))):fetch()
-			if not userid then
-				context.response:err(404, {code=1, msg="no such user"})
-				return
-			end
-
-			local query = [[ DELETE FROM items WHERE itemid = '%s'; ]]
-			local cursor = conn:execute(query:format(id))
+			db.delete_item(context, id, context.params.username)
 
 			context.response:json(cjson.encode({success=true}))
-			assert(conn:close())
 		end,
 	}
 }

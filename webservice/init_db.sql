@@ -11,3 +11,8 @@ CREATE TABLE IF NOT EXISTS items (
 	sort_index integer,
 	userid uuid REFERENCES users ON DELETE CASCADE
 );
+
+CREATE TABLE IF NOT EXISTS aliases (
+	alias text PRIMARY KEY,
+	userid uuid REFERENCES users
+);
