@@ -1,6 +1,5 @@
 local tweed = require "tweed"
 local cjson = require "cjson"
-
 local config = require "config"
 local db = require "db"
 
@@ -15,14 +14,21 @@ local site = tweed.make_site {
 			end
 		end,
 		[tweed.GET] = function(context)
-			local items = db.get_all_by_user(context, context.params.username)
+			local id = context.request.qs.id
+			local user = context.params.username
+			local items
+			if id ~= nil then
+				items = db.get_item(context, user, id)
+			else
+				items = db.get_all_by_user(context, user)
+			end
             if items then
 				context.response:json(cjson.encode(items))
 			end
 		end,
 		[tweed.DELETE] = function(context)
-			local id = context.request.body
-			db.delete_item(context, id, context.params.username)
+			local id = context.request.qs.id
+			db.delete_item(context, context.params.username, id)
 
 			context.response:json(cjson.encode({success=true}))
 		end,

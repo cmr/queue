@@ -68,7 +68,30 @@ function M.get_all_by_user(context, username, tag)
 	return results
 end
 
-function M.delete_item(context, itemid, username)
+function M.get_item(context, username, id)
+	local conn = assert(env:connect(config.name, config.user, config.pass,
+	                                config.host, config.port))
+
+	local userid = M.get_user(context, username)
+	if not userid then
+		return
+	end
+
+	local query = [[ SELECT itemid, content, sort_index FROM items WHERE userid = '%s' AND itemid = '%s'; ]]
+	local cursor = conn:execute(query:format(userid, conn:escape(id)))
+	local results = {}
+	for i = 1, cursor:numrows() do
+		local id, content, idx = cursor:fetch()
+		results[i] = {id=id, content=content, idx=idx or -1}
+	end
+
+	cursor:close()
+	conn:close()
+
+	return results
+end
+
+function M.delete_item(context, username, itemid)
 	local conn = assert(env:connect(config.name, config.user, config.pass,
 	                                config.host, config.port))
 
