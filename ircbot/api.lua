@@ -8,7 +8,6 @@ local M = {}
 
 function M.push(person, item, tags)
 	local tab = {}
-	print ("making request to " .. config.api_url .. person)
 	local _, status = http.request{
 		url = config.api_url .. person, 
 		method = "POST",
@@ -17,7 +16,6 @@ function M.push(person, item, tags)
 		sink = ltn12.sink.table(tab)
 	}
 
-	print ("got " .. table.concat(tab))
 	return status == 200, cjson.decode(table.concat(tab))
 end
 
@@ -45,7 +43,7 @@ function M.pop(person)
 		msg = ""
 	end
 
-	return true, msg .. item.content
+	return true, {msg=msg .. item.content}
 end
 
 function M.getbytag(person, tag)
