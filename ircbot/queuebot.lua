@@ -49,7 +49,7 @@ qb:hook("OnChat", function(user, channel, message)
 					qb:sendChat(user.nick, ("(%s) %s"):format(v.id,v.content))
 				end
 			else
-				qb:sendChat(channel, "Success: " .. res)
+				qb:sendChat(channel, "Success: " .. res or '')
 			end
 			return
 		else

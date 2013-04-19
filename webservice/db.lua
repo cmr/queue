@@ -12,12 +12,12 @@ function M.get_user(context, username)
 	-- first, look for any aliases
 	local userid
 	userid = conn:execute(("SELECT userid FROM aliases WHERE alias = '%s'"):format(username)):fetch()
-	if not userid then
+	if userid == nil then
 		-- no? ok, look for a "real" user
 		userid = conn:execute(("SELECT userid FROM users WHERE username = '%s'"):format(username)):fetch()
 	end
 
-    if not userid then
+	if userid == nil then
 		-- still nothing? :(
 		context.response:err(404, {code = 1, msg = "no such user"})
 	end
@@ -31,13 +31,13 @@ function M.add_item(context, username, content, tags)
 	                                config.host, config.port))
 
 	local userid = M.get_user(context, username)
-	if not userid then
+	if userid == nil then
 		return false
 	end
 
 	local query = [[ INSERT INTO items (itemid, content, sorted, userid) VALUES ('%s', '%s', FALSE, '%s'); ]]
 	query = query:format(uuid.new(), conn:escape(content), userid)
-	conn:execute(query)
+	local suc, err = conn:execute(query)
 
 	conn:commit()
 	conn:close()
