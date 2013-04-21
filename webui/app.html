@@ -34,7 +34,8 @@
 			function del(t) {
 				var p = $(t).parent()
 				var id = $('a', p).attr('title')
-				$.ajax({type: 'DELETE', data: id, success: function(){ p.remove() }, url: "/api/" + $("#name").val()})
+				$.ajax({type: 'DELETE', success: function(){ p.remove() },
+						url: "/api/" + $("#name").val() + "?id=" + id})
 			}
 		</script>
 	</body>
