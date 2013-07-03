@@ -6,9 +6,9 @@ return {
 		host = "ec2-54-225-69-193.compute-1.amazonaws.com",
 	},
 	irc = {
-		nick = "queuebot2",
+		nick = "queuebot",
 		network = "irc.coldfront.net",
-		channels = { "#welcometomars" },
+		channels = { "#ai-dev" },
 	},
 	api_url = "http://localhost/api/"
 }
